@@ -1,11 +1,11 @@
-{ nixpkgs ? import <nixpkgs> { }, srcs, extraTexPackages ? { } }:
+{ pkgs ? import <nixpkgs> { }, srcs, extraTexPackages ? { } }:
 let
   inherit (builtins)
     trace match head tail split filter readFile isList isNull elemAt pathExists;
-  inherit (nixpkgs.lib)
+  inherit (pkgs.lib)
     concatMap concatLists subtractLists splitString genAttrs unique remove;
-  inherit (nixpkgs.lib.filesystem) listFilesRecursive;
-  inherit (nixpkgs) texlive;
+  inherit (pkgs.lib.filesystem) listFilesRecursive;
+  inherit (pkgs) texlive;
   extractRequirements = f:
     let lines = splitString "\n" (readFile f);
     in concatMap extractRequirements' lines;
