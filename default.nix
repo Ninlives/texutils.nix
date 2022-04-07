@@ -3,13 +3,13 @@ let
   inherit (builtins)
     trace match head tail split filter readFile isList isNull elemAt pathExists;
   inherit (pkgs.lib)
-    concatMap concatLists subtractLists splitString genAttrs unique remove hasSuffix;
+    concatMap concatLists subtractLists splitString genAttrs unique remove
+    hasSuffix;
   inherit (pkgs.lib.filesystem) listFilesRecursive;
   inherit (pkgs) texlive;
-  isTexFile = f: let fstr = toString f; in
-    hasSuffix ".tex" fstr ||
-    hasSuffix ".cls" fstr ||
-    hasSuffix ".sty" fstr;
+  isTexFile = f:
+    let fstr = toString f;
+    in hasSuffix ".tex" fstr || hasSuffix ".cls" fstr || hasSuffix ".sty" fstr;
   extractRequirements = f:
     let lines = splitString "\n" (readFile f);
     in concatMap extractRequirements' lines;
@@ -38,8 +38,8 @@ let
       let target = head working;
       in if texlive ? ${target} then
         let
-          texDirs =
-            filter pathExists (map (o: "${o}/tex") texlive.${target}.pkgs);
+          texDirs = filter pathExists (map (o: "${o}/tex")
+            (filter (p: p.tlType or "foo" == "run") texlive.${target}.pkgs));
           texFiles = filter isTexFile (concatMap listFilesRecursive texDirs);
           deps = concatMap extractRequirements texFiles;
           done' = done ++ [ target ];
@@ -48,7 +48,8 @@ let
       else
         collectDeps' (tail working) done;
 
-  requirements = collectDeps (requiredPackages ++ (builtins.attrNames extraTexPackages));
+  requirements =
+    collectDeps (requiredPackages ++ (builtins.attrNames extraTexPackages));
 
 in texlive.combine ((genAttrs requirements (p: texlive.${p})) // {
   inherit (texlive) scheme-small;
