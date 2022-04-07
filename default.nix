@@ -44,8 +44,8 @@ let
       else
         collectDeps' (tail working) done;
 
-  requirements = collectDeps requiredPackages;
+  requirements = collectDeps (requiredPackages ++ (builtins.attrNames extraTexPackages));
 
 in texlive.combine ((genAttrs requirements (p: texlive.${p})) // {
   inherit (texlive) scheme-small;
-} // extraTexPackages)
+})
