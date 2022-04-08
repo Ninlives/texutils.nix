@@ -4,7 +4,7 @@ let
     trace match head tail split filter readFile isList isNull elemAt pathExists;
   inherit (pkgs.lib)
     concatMap concatLists subtractLists splitString genAttrs unique remove
-    hasSuffix;
+    hasSuffix isDerivation;
   inherit (pkgs.lib.filesystem) listFilesRecursive;
   inherit (pkgs) texlive;
   isTexFile = f:
@@ -38,12 +38,14 @@ let
       let target = head working;
       in if texlive ? ${target} then
         let
-          texDirs = filter pathExists (map (o: "${o}/tex")
-            (filter (p: p.tlType or "foo" == "run") texlive.${target}.pkgs));
+          texDirs = filter pathExists (map (o: "${o}/tex") (cleanup
+            (filter (p: isDerivation p && p.tlType or "foo" == "run")
+              texlive.${target}.pkgs)));
           texFiles = filter isTexFile (concatMap listFilesRecursive texDirs);
           deps = concatMap extractRequirements texFiles;
           done' = done ++ [ target ];
-          working' = subtractLists done' (deps ++ tail working);
+          working' = cleanup (deps ++ tail working);
+          cleanup = pkgList: subtractLists done' (unique pkgList);
         in collectDeps' working' done'
       else
         collectDeps' (tail working) done;
